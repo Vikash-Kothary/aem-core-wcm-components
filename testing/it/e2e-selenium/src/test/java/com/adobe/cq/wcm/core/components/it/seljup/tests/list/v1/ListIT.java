@@ -19,9 +19,9 @@ package com.adobe.cq.wcm.core.components.it.seljup.tests.list.v1;
 import com.adobe.cq.testing.selenium.pageobject.EditorPage;
 import com.adobe.cq.testing.selenium.pageobject.PageEditorPage;
 import com.adobe.cq.wcm.core.components.it.seljup.AuthorBaseUITest;
-import com.adobe.cq.wcm.core.components.it.seljup.components.list.ListEditDialog;
-import com.adobe.cq.wcm.core.components.it.seljup.components.list.v1.List;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.CoreComponentConstants;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.list.ListEditDialog;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.list.v1.List;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.RequestConstants;
 import com.adobe.cq.wcm.core.components.it.seljup.util.Commons;
 import java.text.SimpleDateFormat;
 import java.util.Date;
@@ -37,7 +37,7 @@ import org.junit.jupiter.api.Test;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("group2")
+@Tag("group4")
 public class ListIT extends AuthorBaseUITest {
     private static String searchValue = "Victor Sullivan";
     private static String tag1 = "ellie";
@@ -57,6 +57,8 @@ public class ListIT extends AuthorBaseUITest {
     private String page5Path;
     private EditorPage editorPage;
     private List list;
+    private String tag1Path;
+    private String tag2Path;
 
     protected String textRT;
     protected String listRT;
@@ -69,8 +71,8 @@ public class ListIT extends AuthorBaseUITest {
 
     protected void setup() throws ClientException {
         // add 2 tags
-        Commons.addTag(adminClient, tag1);
-        Commons.addTag(adminClient, tag2);
+        tag1Path = Commons.addTag(adminClient, tag1);
+        tag2Path = Commons.addTag(adminClient, tag2);
         // create a separate parent page
         parentPath = authorClient.createPage("parent_page", "parent_page", rootPage, defaultPageTemplate).getSlingPath();
         // add page 1
@@ -118,7 +120,7 @@ public class ListIT extends AuthorBaseUITest {
         testPage = authorClient.createPage("testPage", "Test Page Title", rootPage, defaultPageTemplate).getSlingPath();
 
         // create a proxy component
-        proxyPath = Commons.createProxyComponent(adminClient, Commons.rtList_v1, Commons.proxyPath, null, null);
+        proxyPath = Commons.createProxyComponent(adminClient, listRT, Commons.proxyPath, null, null);
 
         // add the component to test page
         compPath = Commons.addComponent(adminClient, proxyPath, testPage + Commons.relParentCompPath, "list", null);
@@ -145,8 +147,10 @@ public class ListIT extends AuthorBaseUITest {
     @AfterEach
     public void cleanupAfterEach() throws ClientException, InterruptedException {
         Commons.deleteProxyComponent(adminClient, proxyPath);
-        authorClient.deletePageWithRetry(parentPath, true,false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
-        authorClient.deletePageWithRetry(testPage, true,false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(parentPath, true,false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(testPage, true,false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
+        adminClient.deletePath("/content/cq:tags/default/" + tag1Path, HttpStatus.SC_OK);
+        adminClient.deletePath("/content/cq:tags/default/" + tag2Path, HttpStatus.SC_OK);
     }
 
     /**

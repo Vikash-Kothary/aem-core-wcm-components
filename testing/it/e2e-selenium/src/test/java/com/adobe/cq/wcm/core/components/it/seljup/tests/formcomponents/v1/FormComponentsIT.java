@@ -18,9 +18,10 @@ package com.adobe.cq.wcm.core.components.it.seljup.tests.formcomponents.v1;
 
 import com.adobe.cq.testing.selenium.pageobject.EditorPage;
 import com.adobe.cq.wcm.core.components.it.seljup.AuthorBaseUITest;
-import com.adobe.cq.wcm.core.components.it.seljup.components.formcomponents.FormContainerEditDialog;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.CoreComponentConstants;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.Selectors;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.formcomponents.FormContainerEditDialog;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.formcomponents.v1.FormComponents;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.RequestConstants;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.Selectors;
 import com.adobe.cq.wcm.core.components.it.seljup.util.Commons;
 import com.adobe.cq.testing.selenium.pageobject.PageEditorPage;
 import org.apache.http.HttpStatus;
@@ -61,6 +62,7 @@ public class FormComponentsIT extends AuthorBaseUITest {
     protected String formHiddenRT;
     protected String formOptionsRT;
     protected String formButtonRT;
+    protected FormComponents formComponents;
 
 
 
@@ -131,6 +133,8 @@ public class FormComponentsIT extends AuthorBaseUITest {
         // open the page in the editor
         editorPage = new PageEditorPage(testPage);
         editorPage.open();
+
+        formComponents = new FormComponents();
     }
 
 
@@ -152,9 +156,9 @@ public class FormComponentsIT extends AuthorBaseUITest {
     @AfterEach
     public void cleanupAfterEach() throws ClientException, InterruptedException {
         // delete any user generated content
-        authorClient.deletePageWithRetry(userContent, true, false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(userContent, true, false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
         // delete the test page we created
-        authorClient.deletePageWithRetry(testPage, true, false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(testPage, true, false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
 
         // delete the proxy components created
         Commons.deleteProxyComponent(adminClient, compPathContainer);
@@ -170,8 +174,7 @@ public class FormComponentsIT extends AuthorBaseUITest {
     @Test
     @DisplayName("Test: Check if the action 'Store Content' works.")
     public void testStoreContent() throws InterruptedException, ClientException {
-        Commons.openConfigureDialog(containerPath);
-        FormContainerEditDialog dialog = new FormContainerEditDialog();
+        FormContainerEditDialog dialog = formComponents.openEditDialog(containerPath);
         dialog.selectActionType("foundation/components/form/actions/store");
         String actionInputValue = dialog.getActionInputValue();
         String contentJsonUrl_allForm = actionInputValue.substring(0, actionInputValue.length() - 1);

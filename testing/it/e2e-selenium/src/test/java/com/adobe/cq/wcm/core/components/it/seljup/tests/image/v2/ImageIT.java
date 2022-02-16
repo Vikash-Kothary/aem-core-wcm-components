@@ -17,7 +17,7 @@
 package com.adobe.cq.wcm.core.components.it.seljup.tests.image.v2;
 
 import com.adobe.cq.wcm.core.components.it.seljup.AuthorBaseUITest;
-import com.adobe.cq.wcm.core.components.it.seljup.components.image.v2.Image;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.image.v2.Image;
 import com.adobe.cq.wcm.core.components.it.seljup.tests.image.ImageTests;
 import com.adobe.cq.wcm.core.components.it.seljup.util.Commons;
 import org.apache.sling.testing.clients.ClientException;
@@ -32,13 +32,13 @@ import java.util.concurrent.TimeoutException;
 @Tag("group2")
 public class ImageIT extends AuthorBaseUITest {
 
-    private ImageTests imageTests;
-    private static final String clientlibs = "core.wcm.components.image.v2";
+    protected ImageTests imageTests;
+    protected String clientlibs = "core.wcm.components.image.v2";
 
     @BeforeEach
     public void setupBeforeEach() throws ClientException {
         imageTests = new ImageTests();
-        imageTests.setup(adminClient, label, Commons.rtImage_v2, rootPage, defaultPageTemplate, clientlibs, new Image());
+        imageTests.setup(adminClient, contextPath, label, Commons.rtImage_v2, rootPage, defaultPageTemplate, clientlibs, new Image());
     }
 
     @AfterEach
@@ -89,6 +89,19 @@ public class ImageIT extends AuthorBaseUITest {
     @DisplayName("Test: set image as decorative")
     public void testSetImageAsDecorative() throws TimeoutException, InterruptedException {
         imageTests.testSetImageAsDecorativeV2();
+    }
+
+    /**
+     * Test: Check image map areas are rendered, navigate correctly and are responsively adjusted on window resize
+     *
+     * @throws ClientException
+     * @throws TimeoutException
+     * @throws InterruptedException
+     */
+    @Test
+    @DisplayName("Test: Check image map areas are rendered, navigate correctly and are responsively adjusted on window resize")
+    public void testCheckMapAreaNavigationAndResponsiveResize() throws ClientException, TimeoutException, InterruptedException {
+        imageTests.testCheckMapAreaNavigationAndResponsiveResize(adminClient);
     }
 
 }

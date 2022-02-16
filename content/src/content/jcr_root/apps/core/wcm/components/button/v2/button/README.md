@@ -13,7 +13,7 @@ WITHOUT WARRANTIES OR CONDITIONS OF ANY KIND, either express or implied.
 See the License for the specific language governing permissions and
 limitations under the License.
 -->
-Button (v2) Work in progress, do not use in production
+Button (v2)
 ====
 Button component written in HTL.
 
@@ -30,9 +30,10 @@ The following properties are written to JCR for the Button component and are exp
 
 1. `./jcr:title` - defines the button text
 2. `./link` - defines the button link
-3. `./icon` - defines an icon identifier for rendering an icon
-4. `./accessibilityLabel` - defines an accessibility label for the button
-5. `./id` - defines the component HTML ID attribute.
+3. `./linkTarget` - defines if the link should be opened in a new browser tab
+4. `./icon` - defines an icon identifier for rendering an icon
+5. `./accessibilityLabel` - defines an accessibility label for the button
+6. `./id` - defines the component HTML ID attribute.
 
 ## BEM Description
 ```
@@ -50,7 +51,7 @@ Icon styling must be done by users of the Core Components. Here's an [example fr
 * **Vendor**: Adobe
 * **Version**: v2
 * **Compatibility**: AEM 6.3
-* **Status**: work-in-progress
+* **Status**: production-ready
 * **Documentation**: [https://www.adobe.com/go/aem\_cmp\_button\_v2](https://www.adobe.com/go/aem_cmp_button_v2)
 * **Component Library**: [https://www.adobe.com/go/aem\_cmp\_library\_button](https://www.adobe.com/go/aem_cmp_library_button)
 * **Authors**: [Stefan Seifert](https://github.com/stefanseifert), [Vlad Bailescu](https://github.com/vladbailescu), [Jean-Christophe Kautzmann](https://github.com/jckautzmann)

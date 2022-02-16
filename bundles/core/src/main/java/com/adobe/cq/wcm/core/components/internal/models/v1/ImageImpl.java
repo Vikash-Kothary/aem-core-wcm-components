@@ -28,6 +28,7 @@ import javax.json.Json;
 import javax.json.JsonArrayBuilder;
 import javax.json.JsonObjectBuilder;
 
+import com.adobe.cq.wcm.core.components.util.AbstractComponentImpl;
 import org.apache.commons.io.FilenameUtils;
 import org.apache.commons.lang3.CharEncoding;
 import org.apache.commons.lang3.StringUtils;
@@ -41,12 +42,9 @@ import org.apache.sling.commons.osgi.PropertiesUtil;
 import org.apache.sling.models.annotations.Exporter;
 import org.apache.sling.models.annotations.Model;
 import org.apache.sling.models.annotations.Source;
-import org.apache.sling.models.annotations.injectorspecific.InjectionStrategy;
 import org.apache.sling.models.annotations.injectorspecific.ScriptVariable;
 import org.apache.sling.models.annotations.injectorspecific.Self;
-import org.apache.sling.models.annotations.injectorspecific.ValueMapValue;
 import org.jetbrains.annotations.NotNull;
-import org.jetbrains.annotations.Nullable;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;
 
@@ -70,6 +68,9 @@ import com.day.cq.wcm.api.Template;
 import com.day.cq.wcm.api.designer.Style;
 import com.fasterxml.jackson.annotation.JsonIgnore;
 
+import static com.day.cq.commons.jcr.JcrConstants.JCR_CONTENT;
+import static com.day.cq.commons.jcr.JcrConstants.JCR_MIMETYPE;
+
 @Model(adaptables = SlingHttpServletRequest.class, adapters = {Image.class, ComponentExporter.class}, resourceType = ImageImpl.RESOURCE_TYPE)
 @Exporter(name = ExporterConstants.SLING_MODEL_EXPORTER_NAME, extensions = ExporterConstants.SLING_MODEL_EXTENSION)
 public class ImageImpl extends AbstractComponentImpl implements Image {
@@ -87,33 +88,22 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
     protected PageManager pageManager;
 
     @ScriptVariable
-    private Page currentPage;
+    protected Page currentPage;
 
     @ScriptVariable
     protected Style currentStyle;
-
-    @ScriptVariable
-    protected ValueMap properties;
 
     @Inject
     @Source("osgi-services")
     protected MimeTypeService mimeTypeService;
 
-    @ValueMapValue(name = DownloadResource.PN_REFERENCE, injectionStrategy = InjectionStrategy.OPTIONAL)
-    @Nullable
-    protected String fileReference;
-
-    @ValueMapValue(name = ImageResource.PN_ALT, injectionStrategy = InjectionStrategy.OPTIONAL)
-    @Nullable
-    protected String alt;
-
-    @ValueMapValue(name = JcrConstants.JCR_TITLE, injectionStrategy = InjectionStrategy.OPTIONAL)
-    @Nullable
-    protected String title;
-
     @Self
     protected LinkHandler linkHandler;
-    protected Optional<Link> link;
+
+    protected ValueMap properties;
+    protected String fileReference;
+    protected String alt;
+    protected String title;
 
     protected String src;
     protected String[] smartImages = new String[]{};
@@ -133,9 +123,21 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
     protected boolean disableLazyLoading;
     protected int jpegQuality;
     protected String imageName;
+    protected Resource fileResource;
+    protected Optional<Link> link;
 
     public ImageImpl() {
         selector = AdaptiveImageServlet.DEFAULT_SELECTOR;
+    }
+
+    /**
+     * Initializes the resource:
+     * - for Image v1 and v2 the resource is the current resource
+     * - for Image v3 which supports inheritance from the featured image of the linked page or of the current page,
+     * the current resource is wrapped and augmented with the inherited properties and child resources of the featured image.
+     */
+    protected void initResource() {
+        // do nothing for image v1
     }
 
     /**
@@ -145,10 +147,21 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
      */
     @PostConstruct
     protected void initModel() {
+        initResource();
+        // Note: all the properties and child resources of the image should be retrieved through the wrapped 'resource' object
+        // and not through the injected properties of the model.
+        properties = resource.getValueMap();
+        fileResource = resource.getChild(DownloadResource.NN_FILE);
+        fileReference = properties.get(DownloadResource.PN_REFERENCE, String.class);
+        alt = properties.get(ImageResource.PN_ALT, String.class);
+        title = properties.get(JcrConstants.JCR_TITLE, String.class);
+        link = Optional.empty();
+
         mimeType = MIME_TYPE_IMAGE_JPEG;
         displayPopupTitle = properties.get(PN_DISPLAY_POPUP_TITLE, currentStyle.get(PN_DISPLAY_POPUP_TITLE, false));
         isDecorative = properties.get(PN_IS_DECORATIVE, currentStyle.get(PN_IS_DECORATIVE, false));
         Asset asset = null;
+
         if (StringUtils.isNotEmpty(fileReference)) {
             // the image is coming from DAM
             final Resource assetResource = request.getResourceResolver().getResource(fileReference);
@@ -156,7 +169,7 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
                 asset = assetResource.adaptTo(Asset.class);
                 if (asset != null) {
                     mimeType = PropertiesUtil.toString(asset.getMimeType(), MIME_TYPE_IMAGE_JPEG);
-                    imageName = getImageNameFromDam();
+                    imageName = getImageNameFromDam(fileReference);
                     hasContent = true;
                 } else {
                     LOGGER.error("Unable to adapt resource '{}' used by image '{}' to an asset.", fileReference, resource.getPath());
@@ -165,9 +178,15 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
                 LOGGER.error("Unable to find resource '{}' used by image '{}'.", fileReference, resource.getPath());
             }
         } else {
-            Resource file = resource.getChild(DownloadResource.NN_FILE);
-            if (file != null) {
-                mimeType = PropertiesUtil.toString(file.getResourceMetadata().get(ResourceMetadata.CONTENT_TYPE), MIME_TYPE_IMAGE_JPEG);
+            if (fileResource != null) {
+                mimeType = PropertiesUtil.toString(fileResource.getResourceMetadata().get(ResourceMetadata.CONTENT_TYPE), null);
+                if (StringUtils.isEmpty(mimeType)) {
+                    Resource fileResourceContent = fileResource.getChild(JCR_CONTENT);
+                    if (fileResourceContent != null) {
+                        ValueMap fileProperties = fileResourceContent.getValueMap();
+                        mimeType = fileProperties.get(JCR_MIMETYPE, MIME_TYPE_IMAGE_JPEG);
+                    }
+                }
                 String fileName = properties.get(ImageResource.PN_FILE_NAME, String.class);
                 imageName = StringUtils.isNotEmpty(fileName) ? getSeoFriendlyName(FilenameUtils.getBaseName(fileName)) : "";
                 hasContent = true;
@@ -185,7 +204,6 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
             // Check for the suffix and remove as necessary.
             mimeType = mimeType.split(";")[0];
             extension = mimeTypeService.getExtension(mimeType);
-            ValueMap properties = resource.getValueMap();
             Calendar lastModified = properties.get(JcrConstants.JCR_LASTMODIFIED, Calendar.class);
             if (lastModified == null) {
                 lastModified = properties.get(NameConstants.PN_PAGE_LAST_MOD, Calendar.class);
@@ -220,10 +238,10 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
                 smartSizes = new int[supportedRenditionWidths.size()];
                 for (Integer width : supportedRenditionWidths) {
                     smartImages[index] = baseResourcePath + DOT +
-                        selector + DOT + jpegQuality + DOT + width + DOT + extension +
-                        (inTemplate ? Text.escapePath(templateRelativePath) : "") +
-                        (lastModifiedDate > 0 ? ("/" + lastModifiedDate +
-                        (StringUtils.isNotBlank(imageName) ? ("/" + imageName) : "") + DOT + extension): "");
+                            selector + DOT + jpegQuality + DOT + width + DOT + extension +
+                            (inTemplate ? Text.escapePath(templateRelativePath) : "") +
+                            (lastModifiedDate > 0 ? ("/" + lastModifiedDate + (StringUtils.isNotBlank(imageName) ? ("/" + imageName) : "")) : "") +
+                            (inTemplate || lastModifiedDate > 0 ? DOT + extension : "");
                     smartSizes[index] = width;
                     index++;
                 }
@@ -237,12 +255,12 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
             } else {
                 src += extension;
             }
-            src += (inTemplate ? Text.escapePath(templateRelativePath) : "") + (lastModifiedDate > 0 ? ("/" + lastModifiedDate +
-                (StringUtils.isNotBlank(imageName) ? ("/" + imageName): "") + DOT + extension) : "");
+            src += (inTemplate ? Text.escapePath(templateRelativePath) : "") +
+                    (lastModifiedDate > 0 ? ("/" + lastModifiedDate + (StringUtils.isNotBlank(imageName) ? ("/" + imageName): "")) : "") +
+                    (inTemplate || lastModifiedDate > 0 ? DOT + extension : "");
             if (!isDecorative) {
                 link = linkHandler.getLink(resource);
             } else {
-                link = Optional.empty();
                 alt = null;
             }
             buildJson();
@@ -254,8 +272,8 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
      *
      * @return image name from DAM
      */
-    protected String getImageNameFromDam() {
-        return Optional.ofNullable(this.fileReference)
+    protected String getImageNameFromDam(String fileReference) {
+        return Optional.ofNullable(fileReference)
             .map(reference -> request.getResourceResolver().getResource(reference))
             .map(damResource -> damResource.adaptTo(Asset.class))
             .map(Asset::getName)
@@ -378,18 +396,24 @@ public class ImageImpl extends AbstractComponentImpl implements Image {
      */
 
     @Override
+    @JsonIgnore
     @NotNull
-    protected ImageData getComponentData() {
-        return DataLayerBuilder.extending(super.getComponentData()).asImageComponent()
-            .withTitle(this::getTitle)
-            .withLinkUrl(() -> link.map(Link::getMappedURL).orElse(null))
-            .withAssetData(() ->
-                Optional.ofNullable(this.fileReference)
-                    .map(reference -> this.request.getResourceResolver().getResource(reference))
-                    .map(assetResource -> assetResource.adaptTo(Asset.class))
-                    .map(DataLayerBuilder::forAsset)
-                    .map(AssetDataBuilder::build)
-                    .orElse(null))
-            .build();
+    public ImageData getComponentData() {
+        return getComponentData(fileReference);
     }
+
+    protected ImageData getComponentData(String fileReference) {
+        return DataLayerBuilder.extending(super.getComponentData()).asImageComponent()
+                .withTitle(this::getTitle)
+                .withLinkUrl(() -> link.map(Link::getMappedURL).orElse(null))
+                .withAssetData(() ->
+                        Optional.ofNullable(fileReference)
+                                .map(reference -> this.request.getResourceResolver().getResource(reference))
+                                .map(assetResource -> assetResource.adaptTo(Asset.class))
+                                .map(DataLayerBuilder::forAsset)
+                                .map(AssetDataBuilder::build)
+                                .orElse(null))
+                .build();
+    }
+
 }

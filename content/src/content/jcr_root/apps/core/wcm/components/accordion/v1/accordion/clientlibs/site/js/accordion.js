@@ -16,6 +16,11 @@
 (function() {
     "use strict";
 
+    var containerUtils = window.CQ && window.CQ.CoreComponents && window.CQ.CoreComponents.container && window.CQ.CoreComponents.container.utils ? window.CQ.CoreComponents.container.utils : undefined;
+    if (!containerUtils) {
+        // eslint-disable-next-line no-console
+        console.warn("Accordion: container utilities at window.CQ.CoreComponents.container.utils are not available. This can lead to missing features. Ensure the core.wcm.components.commons.site.container client library is included on the page.");
+    }
     var dataLayerEnabled;
     var dataLayer;
     var delay = 100;
@@ -116,9 +121,11 @@
                 that._elements["panel"] = Array.isArray(that._elements["panel"]) ? that._elements["panel"] : [that._elements["panel"]];
 
                 // Expand the item based on deep-link-id if it matches with any existing accordion item id
-                var deepLinkItem = window.CQ.CoreComponents.container.utils.getDeepLinkItem(that, "item");
-                if (deepLinkItem && !deepLinkItem.hasAttribute(dataAttributes.item.expanded)) {
-                    setItemExpanded(deepLinkItem, true);
+                if (containerUtils) {
+                    var deepLinkItem = containerUtils.getDeepLinkItem(that, "item");
+                    if (deepLinkItem && !deepLinkItem.hasAttribute(dataAttributes.item.expanded)) {
+                        setItemExpanded(deepLinkItem, true);
+                    }
                 }
 
                 if (that._properties.singleExpansion) {
@@ -213,7 +220,7 @@
             that._properties = {};
 
             for (var key in properties) {
-                if (properties.hasOwnProperty(key)) {
+                if (Object.prototype.hasOwnProperty.call(properties, key)) {
                     var property = properties[key];
                     var value = null;
 
@@ -321,10 +328,8 @@
                             }
                         }
                     }
-                    setItemExpanded(item, true);
-                } else {
-                    setItemExpanded(item, !getItemExpanded(item));
                 }
+                setItemExpanded(item, !getItemExpanded(item));
 
                 if (dataLayerEnabled) {
                     var accordionId = that._elements.self.id;
@@ -456,11 +461,6 @@
                 panel.classList.add(cssClasses.panel.expanded);
                 panel.classList.remove(cssClasses.panel.hidden);
                 panel.setAttribute("aria-hidden", false);
-
-                if (that._properties.singleExpansion) {
-                    button.classList.add(cssClasses.button.disabled);
-                    button.setAttribute("aria-disabled", true);
-                }
             }
         }
 
@@ -476,9 +476,7 @@
             if (index > -1) {
                 var button = that._elements["button"][index];
                 var panel = that._elements["panel"][index];
-                button.classList.remove(cssClasses.button.disabled);
                 button.classList.remove(cssClasses.button.expanded);
-                button.removeAttribute("aria-disabled");
                 // used to fix some known screen readers issues in reading the correct state of the 'aria-expanded' attribute
                 // e.g. https://bugs.webkit.org/show_bug.cgi?id=210934
                 setTimeout(function() {
@@ -503,6 +501,23 @@
     }
 
     /**
+     * Scrolls the browser when the URI fragment is changed to the item of the container Accordion component that corresponds to the deep link in the URL fragment,
+       and displays its content.
+     */
+    function onHashChange() {
+        if (location.hash && location.hash !== "#") {
+            var anchorLocation = decodeURIComponent(location.hash);
+            var anchorElement = document.querySelector(anchorLocation);
+            if (anchorElement && anchorElement.classList.contains("cmp-accordion__item") && !anchorElement.hasAttribute("data-cmp-expanded")) {
+                var anchorElementButton = document.querySelector(anchorLocation + "-button");
+                if (anchorElementButton) {
+                    anchorElementButton.click();
+                }
+            }
+        }
+    }
+
+    /**
      * Reads options data from the Accordion wrapper element, defined via {@code data-cmp-*} data attributes.
      *
      * @private
@@ -517,7 +532,7 @@
         var reserved = ["is", "hook" + capitalized];
 
         for (var key in data) {
-            if (data.hasOwnProperty(key)) {
+            if (Object.prototype.hasOwnProperty.call(data, key)) {
                 var value = data[key];
 
                 if (key.indexOf(NS) === 0) {
@@ -542,11 +557,14 @@
      * @returns {String} dataLayerId or undefined
      */
     function getDataLayerId(item) {
-        if (item && item.dataset.cmpDataLayer) {
-            return Object.keys(JSON.parse(item.dataset.cmpDataLayer))[0];
-        } else {
-            return item.id;
+        if (item) {
+            if (item.dataset.cmpDataLayer) {
+                return Object.keys(JSON.parse(item.dataset.cmpDataLayer))[0];
+            } else {
+                return item.id;
+            }
         }
+        return null;
     }
 
     /**
@@ -595,5 +613,9 @@
         document.addEventListener("DOMContentLoaded", onDocumentReady);
     }
 
-    window.addEventListener("hashchange", window.CQ.CoreComponents.container.utils.locationHashChanged, false);
+    if (containerUtils) {
+        window.addEventListener("load", containerUtils.scrollToAnchor, false);
+    }
+    window.addEventListener("hashchange", onHashChange, false);
+
 }());

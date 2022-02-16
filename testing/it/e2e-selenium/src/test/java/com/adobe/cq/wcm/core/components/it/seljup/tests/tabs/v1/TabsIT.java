@@ -22,12 +22,12 @@ import com.adobe.cq.testing.selenium.pagewidgets.cq.EditableToolbar;
 import com.adobe.cq.testing.selenium.pagewidgets.cq.InsertComponentDialog;
 import com.adobe.cq.testing.selenium.utils.KeyboardShortCuts;
 import com.adobe.cq.wcm.core.components.it.seljup.AuthorBaseUITest;
-import com.adobe.cq.wcm.core.components.it.seljup.assertion.EditableToolbarAssertion;
-import com.adobe.cq.wcm.core.components.it.seljup.components.commons.ChildrenEditor;
-import com.adobe.cq.wcm.core.components.it.seljup.components.commons.PanelSelector;
-import com.adobe.cq.wcm.core.components.it.seljup.components.tabs.TabsEditDialog;
-import com.adobe.cq.wcm.core.components.it.seljup.components.tabs.v1.Tabs;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.CoreComponentConstants;
+import com.adobe.cq.wcm.core.components.it.seljup.util.assertion.EditableToolbarAssertion;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.commons.ChildrenEditor;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.commons.PanelSelector;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.tabs.TabsEditDialog;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.tabs.v1.Tabs;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.RequestConstants;
 import com.adobe.cq.wcm.core.components.it.seljup.util.Commons;
 import com.codeborne.selenide.ElementsCollection;
 import com.codeborne.selenide.WebDriverRunner;
@@ -48,7 +48,7 @@ import java.util.concurrent.TimeoutException;
 
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
-@Tag("group2")
+@Tag("group3")
 public class TabsIT extends AuthorBaseUITest {
 
     private static String pageVar = "tabs_page";
@@ -77,7 +77,6 @@ public class TabsIT extends AuthorBaseUITest {
      *
      * @throws ClientException
      */
-
     @BeforeEach
     public void setupBeforeEach() throws ClientException {
         // 1.
@@ -136,7 +135,7 @@ public class TabsIT extends AuthorBaseUITest {
         Commons.deleteProxyComponent(adminClient, proxyPath);
 
         // 2.
-        authorClient.deletePageWithRetry(testPage, true,false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(testPage, true,false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
 
     }
 
@@ -152,8 +151,7 @@ public class TabsIT extends AuthorBaseUITest {
      */
     private ElementsCollection createItems() throws InterruptedException {
         //1.
-        Commons.openConfigureDialog(cmpPath);
-        TabsEditDialog editDialog = tabs.getEditDialog();
+        TabsEditDialog editDialog = tabs.openEditDialog(cmpPath);
         editDialog.openItemsTab();
 
         //2.
@@ -173,7 +171,7 @@ public class TabsIT extends AuthorBaseUITest {
         Commons.saveConfigureDialog();
 
         //4.
-        Commons.openConfigureDialog(testPage + Commons.relParentCompPath + componentName);
+        tabs.openEditDialog(cmpPath);
         editDialog.openItemsTab();
         ElementsCollection items = childrenEditor.getInputItems();
         assertTrue(items.size() == 3, "Number to items added should be 3");
@@ -206,10 +204,9 @@ public class TabsIT extends AuthorBaseUITest {
         String cmpPath = Commons.addComponent(adminClient, component, parentPath + "/", null, null);
 
         //2.
-        TabsEditDialog editDialog = tabs.getEditDialog();
+        TabsEditDialog editDialog = tabs.openEditDialog(parentPath);
         ChildrenEditor childrenEditor = editDialog.getChildrenEditor();
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
-        Commons.openConfigureDialog(parentPath);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
         editDialog.openItemsTab();
 
         //3.
@@ -249,9 +246,8 @@ public class TabsIT extends AuthorBaseUITest {
         createItems();
 
         //2.
-        TabsEditDialog editDialog = tabs.getEditDialog();
+        TabsEditDialog editDialog = tabs.openEditDialog(cmpPath);
         ChildrenEditor childrenEditor = editDialog.getChildrenEditor();
-        Commons.openConfigureDialog(cmpPath);
         editDialog.openItemsTab();
 
         //3.
@@ -259,7 +255,7 @@ public class TabsIT extends AuthorBaseUITest {
         Commons.saveConfigureDialog();
 
         //4.
-        Commons.openConfigureDialog(testPage + Commons.relParentCompPath + componentName);
+        tabs.openEditDialog(cmpPath);
         editDialog.openItemsTab();
         ElementsCollection items = childrenEditor.getInputItems();
 
@@ -292,9 +288,8 @@ public class TabsIT extends AuthorBaseUITest {
         createItems();
 
         //2.
-        TabsEditDialog editDialog = tabs.getEditDialog();
+        TabsEditDialog editDialog = tabs.openEditDialog(cmpPath);
         ChildrenEditor childrenEditor = editDialog.getChildrenEditor();
-        Commons.openConfigureDialog(testPage + Commons.relParentCompPath + componentName);
         editDialog.openItemsTab();
 
         //3.
@@ -304,7 +299,7 @@ public class TabsIT extends AuthorBaseUITest {
         Commons.saveConfigureDialog();
 
         //5.
-        Commons.openConfigureDialog(testPage + Commons.relParentCompPath + componentName);
+        tabs.openEditDialog(cmpPath);
         editDialog.openItemsTab();
 
         //6.
@@ -328,8 +323,7 @@ public class TabsIT extends AuthorBaseUITest {
     public void testSetActiveItem() throws InterruptedException {
         createItems();
 
-        TabsEditDialog editDialog = tabs.getEditDialog();
-        Commons.openConfigureDialog(cmpPath);
+        TabsEditDialog editDialog = tabs.openEditDialog(cmpPath);
 
         // switch to properties tab
         TabsEditDialog.EditDialogProperties editDialogProperties = editDialog.openPropertiesTab();
@@ -348,7 +342,7 @@ public class TabsIT extends AuthorBaseUITest {
         Commons.switchToDefaultContext();
 
         // open the edit dialog
-        Commons.openConfigureDialog(cmpPath);
+        tabs.openEditDialog(cmpPath);
         // switch to properties tab
         editDialogProperties = editDialog.openPropertiesTab();
         // select second item as active
@@ -385,7 +379,7 @@ public class TabsIT extends AuthorBaseUITest {
         assertTrue(panelSelector.isVisible(), "Panel selector should be visible");
 
         // verify that 3 items are available in the panel selector and the correct titles are visible
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
         ElementsCollection panelSelectorItems = panelSelector.getItems();
         assertTrue(panelSelectorItems.size() == 3, "Number to items in panel selector should be 3");
         assertTrue(panelSelectorItems.get(0).getText().contains("item0"), "First panel select item should be item0");
@@ -428,7 +422,7 @@ public class TabsIT extends AuthorBaseUITest {
         Commons.switchContext("ContentFrame");
 
         //wait for the reordering to reflect
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
 
         // verify new Tabs DOM item order is as expected
         ElementsCollection tabItems = tabs.getTabItems();
@@ -473,7 +467,7 @@ public class TabsIT extends AuthorBaseUITest {
 
         String component = "[data-type='Editable'][data-path='" + compPath +"']";
         final WebDriver webDriver = WebDriverRunner.getWebDriver();
-        new WebDriverWait(webDriver, CoreComponentConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.elementToBeClickable(By.cssSelector(component)));
+        new WebDriverWait(webDriver, RequestConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.elementToBeClickable(By.cssSelector(component)));
         EditableToolbar editableToolbar = editorPage.openEditableToolbar(compPath);
 
         //2.
@@ -483,7 +477,7 @@ public class TabsIT extends AuthorBaseUITest {
         editableToolbarAssertion.assertInsertButton(true);
 
         editableToolbar.getInsertButton().click();
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
         assertTrue(Commons.isComponentPresentInInsertDialog(teaserProxyPath), "teaser component should be present in insert dialog");
         Commons.deleteProxyComponent(adminClient, teaserProxyPath);
     }

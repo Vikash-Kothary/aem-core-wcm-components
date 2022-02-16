@@ -13,7 +13,6 @@
  ~ See the License for the specific language governing permissions and
  ~ limitations under the License.
  ~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~~*/
-/* globals hobs,jQuery */
 ;(function(h, $) { // eslint-disable-line no-extra-semi
     "use strict";
 
@@ -145,7 +144,7 @@
             })
             .assert.exist(
                 '.cmp-navigation__item.cmp-navigation__item--level-0.cmp-navigation__item--active:contains("Page 1.1")')
-            .assert.exist('a.cmp-navigation__item-link[href$="/page_1_1_vanity"]')
+            .assert.exist('a.cmp-navigation__item-link[href$="/page_1_1.html"]')
             .assert.exist('.cmp-navigation__item.cmp-navigation__item--level-1:contains("Page 1.1.1")')
             .assert.exist('.cmp-navigation__item.cmp-navigation__item--level-1:contains("Page 1.1.2")', false)
             .assert.exist('.cmp-navigation__item.cmp-navigation__item--level-1:contains("Page 1.1.3")');
@@ -174,7 +173,7 @@
                 '.cmp-navigation__item.cmp-navigation__item--level-0.cmp-navigation__item--active:contains("Page 1")')
             .assert.exist(
                 '.cmp-navigation__item.cmp-navigation__item--level-1.cmp-navigation__item--active:contains("Page 1.1")')
-            .assert.exist('a.cmp-navigation__item-link[href$="/page_1_1_vanity"]')
+            .assert.exist('a.cmp-navigation__item-link[href$="/page_1_1.html"]')
             .assert.exist('.cmp-navigation__item.cmp-navigation__item--level-2:contains("Page 1.1.1")')
             .assert.exist('.cmp-navigation__item.cmp-navigation__item--level-2:contains("Page 1.1.2")', false)
             .assert.exist('.cmp-navigation__item.cmp-navigation__item--level-2:contains("Page 1.1.3")');

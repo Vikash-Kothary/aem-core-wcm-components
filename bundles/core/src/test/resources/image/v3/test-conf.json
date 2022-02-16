@@ -172,6 +172,28 @@
                     "alt"               : "Adobe Logo",
                     "jcr:title"         : "Adobe Logo",
                     "linkURL"           : "/content/test"
+                  },
+                  "image_template_no_date"             : {
+                    "jcr:primaryType"   : "nt:unstructured",
+                    "fileReference"     : "/content/dam/core/images/Adobe_Systems_logo_and_wordmark_no_date.png",
+                    "sling:resourceType": "core/wcm/components/image/v3/image",
+                    "alt"               : "Adobe Logo",
+                    "jcr:title"         : "Adobe Logo",
+                    "linkURL"           : "/content/test"
+                  },
+                  "image_template_page_image1"             : {
+                    "jcr:primaryType"   : "nt:unstructured",
+                    "sling:resourceType": "core/wcm/components/image/v3/image",
+                    "imageFromPageImage": "true"
+                  },
+                  "image_template_page_image2"             : {
+                    "jcr:primaryType": "nt:unstructured",
+                    "jcr:createdBy": "admin",
+                    "alt": "alt from page0_image2",
+                    "altValueFromPageImage": "true",
+                    "imageFromPageImage": "true",
+                    "linkURL": "/content/test_page4",
+                    "sling:resourceType": "core/wcm/components/image/v3/image"
                   }
                 }
               }

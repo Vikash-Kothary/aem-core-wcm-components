@@ -18,12 +18,12 @@ package com.adobe.cq.wcm.core.components.it.seljup.tests.accordion.v1;
 
 import com.adobe.cq.testing.selenium.pageobject.EditorPage;
 import com.adobe.cq.wcm.core.components.it.seljup.AuthorBaseUITest;
-import com.adobe.cq.wcm.core.components.it.seljup.assertion.EditableToolbarAssertion;
-import com.adobe.cq.wcm.core.components.it.seljup.components.accordion.AccordionEditDialog;
-import com.adobe.cq.wcm.core.components.it.seljup.components.accordion.v1.Accordion;
-import com.adobe.cq.wcm.core.components.it.seljup.components.commons.ChildrenEditor;
-import com.adobe.cq.wcm.core.components.it.seljup.components.commons.PanelSelector;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.CoreComponentConstants;
+import com.adobe.cq.wcm.core.components.it.seljup.util.assertion.EditableToolbarAssertion;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.accordion.AccordionEditDialog;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.accordion.v1.Accordion;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.commons.ChildrenEditor;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.commons.PanelSelector;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.RequestConstants;
 import com.adobe.cq.wcm.core.components.it.seljup.util.Commons;
 import com.adobe.cq.testing.selenium.pageobject.PageEditorPage;
 import com.adobe.cq.testing.selenium.pagewidgets.coral.CoralCheckbox;
@@ -138,7 +138,7 @@ public class AccordionIT extends AuthorBaseUITest {
         Commons.deleteProxyComponent(adminClient, proxyPath);
 
         // 2.
-        authorClient.deletePageWithRetry(testPage, true,false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(testPage, true,false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
     }
 
 
@@ -155,8 +155,7 @@ public class AccordionIT extends AuthorBaseUITest {
 
     private ElementsCollection createItem() throws InterruptedException {
         //1.
-        Commons.openConfigureDialog(cmpPath);
-        AccordionEditDialog editDialog = accordion.getEditDialog();
+        AccordionEditDialog editDialog = accordion.openEditDialog(cmpPath);
         editDialog.openItemsTab();
 
         //2.
@@ -176,7 +175,7 @@ public class AccordionIT extends AuthorBaseUITest {
         Commons.saveConfigureDialog();
 
         //4.
-        Commons.openConfigureDialog(cmpPath);
+        accordion.openEditDialog(cmpPath);
         editDialog.openItemsTab();
         ElementsCollection items = childrenEditor.getInputItems();
         assertTrue(items.size() == 3, "Number to items added should be 3");
@@ -220,13 +219,12 @@ public class AccordionIT extends AuthorBaseUITest {
      * Switches context to the content frame and verifies the passed (ordered) items
      *
      * @param items list of items in component to be verified
-     * @param properties editdialog properties object
      *
      * 1. switch to the content frame
      * 2. verify the expanded items match those passed
      * 3. reset context back to the edit frame
      */
-    private void verifyExpandedItems(ArrayList<String> items, AccordionEditDialog.EditDialogProperties properties) {
+    private void verifyExpandedItems(ArrayList<String> items) {
         //1.
         Commons.switchContext("ContentFrame");
 
@@ -265,10 +263,9 @@ public class AccordionIT extends AuthorBaseUITest {
         String cmpPath = Commons.addComponent(adminClient, component, parentPath + "/", null, null);
 
         //2.
-        AccordionEditDialog editDialog = accordion.getEditDialog();
+        AccordionEditDialog editDialog = accordion.openEditDialog(parentPath);
         ChildrenEditor childrenEditor = editDialog.getChildrenEditor();
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
-        Commons.openConfigureDialog(parentPath);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
         editDialog.openItemsTab();
 
         //3.
@@ -296,8 +293,7 @@ public class AccordionIT extends AuthorBaseUITest {
 
     private CoralSelectList selectExpandedItem(int idx) throws InterruptedException {
         //1.
-        AccordionEditDialog editDialog = accordion.getEditDialog();
-        Commons.openConfigureDialog(cmpPath);
+        AccordionEditDialog editDialog = accordion.openEditDialog(cmpPath);
 
         //2.
         AccordionEditDialog.EditDialogProperties properties =  editDialog.getEditDialogProperties();
@@ -333,8 +329,7 @@ public class AccordionIT extends AuthorBaseUITest {
         ElementsCollection items = createItem();
 
         //2.
-        AccordionEditDialog editDialog = accordion.getEditDialog();
-        Commons.openConfigureDialog(cmpPath);
+        AccordionEditDialog editDialog = accordion.openEditDialog(cmpPath);
         verifyExpandedItemsSelect(items, editDialog.getEditDialogProperties());
 
         //3.
@@ -362,9 +357,8 @@ public class AccordionIT extends AuthorBaseUITest {
         createItem();
 
         //2.
-        AccordionEditDialog editDialog = accordion.getEditDialog();
+        AccordionEditDialog editDialog = accordion.openEditDialog(cmpPath);
         ChildrenEditor childrenEditor = editDialog.getChildrenEditor();
-        Commons.openConfigureDialog(cmpPath);
         editDialog.openItemsTab();
 
         //3.
@@ -372,7 +366,7 @@ public class AccordionIT extends AuthorBaseUITest {
         Commons.saveConfigureDialog();
 
         //4.
-        Commons.openConfigureDialog(cmpPath);
+        accordion.openEditDialog(cmpPath);
         editDialog.openItemsTab();
         ElementsCollection items = childrenEditor.getInputItems();
 
@@ -410,9 +404,8 @@ public class AccordionIT extends AuthorBaseUITest {
         createItem();
 
         //2.
-        AccordionEditDialog editDialog = accordion.getEditDialog();
+        AccordionEditDialog editDialog = accordion.openEditDialog(cmpPath);
         ChildrenEditor childrenEditor = editDialog.getChildrenEditor();
-        Commons.openConfigureDialog(cmpPath);
         editDialog.openItemsTab();
 
         //3.
@@ -422,7 +415,7 @@ public class AccordionIT extends AuthorBaseUITest {
         Commons.saveConfigureDialog();
 
         //5.
-        Commons.openConfigureDialog(cmpPath);
+        accordion.openEditDialog(cmpPath);
         editDialog.openItemsTab();
 
         //6.
@@ -465,17 +458,15 @@ public class AccordionIT extends AuthorBaseUITest {
         selectExpandedItem(1);
 
         //3.
-        AccordionEditDialog editDialog = accordion.getEditDialog();
-        AccordionEditDialog.EditDialogProperties properties =  editDialog.getEditDialogProperties();
         ArrayList<String> items = new ArrayList<>();
         items.add("item1");
-        verifyExpandedItems(items, properties);
+        verifyExpandedItems(items);
 
         //4.
-        Commons.openConfigureDialog(cmpPath);
+        AccordionEditDialog editDialog = accordion.openEditDialog(cmpPath);
 
         //5.
-        properties =  editDialog.getEditDialogProperties();
+        AccordionEditDialog.EditDialogProperties properties =  editDialog.getEditDialogProperties();
         properties.openProperties();
         properties.openExpandedSelect(" > button");
         CoralSelectList selectedItems = properties.selectList();
@@ -485,12 +476,12 @@ public class AccordionIT extends AuthorBaseUITest {
         Commons.saveConfigureDialog();
 
         //wait for configuration changes to reflect
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
         //7.
         items.clear();
         items.add("item1");
         items.add("item2");
-        verifyExpandedItems(items, properties);
+        verifyExpandedItems(items);
     }
 
     /**
@@ -515,8 +506,7 @@ public class AccordionIT extends AuthorBaseUITest {
         createItem();
 
         //2.
-        AccordionEditDialog editDialog = accordion.getEditDialog();
-        Commons.openConfigureDialog(cmpPath);
+        AccordionEditDialog editDialog = accordion.openEditDialog(cmpPath);
         AccordionEditDialog.EditDialogProperties properties =  editDialog.getEditDialogProperties();
 
         //3.
@@ -546,7 +536,7 @@ public class AccordionIT extends AuthorBaseUITest {
         //8.
         ArrayList<String> items = new ArrayList<>();
         items.add("item0");
-        verifyExpandedItems(items, properties);
+        verifyExpandedItems(items);
     }
 
     /**
@@ -571,7 +561,7 @@ public class AccordionIT extends AuthorBaseUITest {
         //1.
         String component = "[data-type='Editable'][data-path='" + cmpPath +"']";
         final WebDriver webDriver = WebDriverRunner.getWebDriver();
-        new WebDriverWait(webDriver, CoreComponentConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.elementToBeClickable(By.cssSelector(component)));
+        new WebDriverWait(webDriver, RequestConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.elementToBeClickable(By.cssSelector(component)));
         EditableToolbar editableToolbar = editorPage.openEditableToolbar(cmpPath);
 
         //2.
@@ -595,7 +585,7 @@ public class AccordionIT extends AuthorBaseUITest {
         PanelSelector panelSelector = new PanelSelector();
         assertTrue(panelSelector.isVisible(), "Panel selector should be visible");
 
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
 
         //7.
         ElementsCollection items = panelSelector.getItems();
@@ -652,7 +642,7 @@ public class AccordionIT extends AuthorBaseUITest {
         editableToolbar.clickPanelSelect();
         PanelSelector panelSelector = new PanelSelector();
         final WebDriver webDriver = WebDriverRunner.getWebDriver();
-        new WebDriverWait(webDriver, CoreComponentConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(panelSelector.getCssSelector())));
+        new WebDriverWait(webDriver, RequestConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.visibilityOfElementLocated(By.cssSelector(panelSelector.getCssSelector())));
 
         //4.
         panelSelector.reorderItems(0, 2);
@@ -662,7 +652,7 @@ public class AccordionIT extends AuthorBaseUITest {
         ElementsCollection accordionItems = accordion.getAccordionItem();
 
         //wait for the reordering to reflect
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
         assertTrue(accordionItems.size() == 3, "Number to items added should be 3");
         assertTrue(accordion.getAccordionItemButton(0).getText().contains("item1"), "First panel select item should be item1");
         assertTrue(accordion.getAccordionItemButton(1).getText().contains("item2"), "Second panel select item should be item0");
@@ -741,7 +731,7 @@ public class AccordionIT extends AuthorBaseUITest {
 
         String component = "[data-type='Editable'][data-path='" + compPath +"']";
         final WebDriver webDriver = WebDriverRunner.getWebDriver();
-        new WebDriverWait(webDriver, CoreComponentConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.elementToBeClickable(By.cssSelector(component)));
+        new WebDriverWait(webDriver, RequestConstants.TIMEOUT_TIME_SEC).until(ExpectedConditions.elementToBeClickable(By.cssSelector(component)));
         EditableToolbar editableToolbar = editorPage.openEditableToolbar(compPath);
 
         //2.
@@ -751,7 +741,7 @@ public class AccordionIT extends AuthorBaseUITest {
         editableToolbarAssertion.assertInsertButton(true);
 
         editableToolbar.getInsertButton().click();
-        Commons.webDriverWait(CoreComponentConstants.WEBDRIVER_WAIT_TIME_MS);
+        Commons.webDriverWait(RequestConstants.WEBDRIVER_WAIT_TIME_MS);
         assertTrue(Commons.isComponentPresentInInsertDialog(teaserProxyPath), "teaser component should be present in insert dialog");
 
         Commons.deleteProxyComponent(adminClient, teaserProxyPath);

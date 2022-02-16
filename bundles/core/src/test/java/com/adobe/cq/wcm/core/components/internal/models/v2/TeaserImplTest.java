@@ -17,18 +17,21 @@ package com.adobe.cq.wcm.core.components.internal.models.v2;
 
 import java.util.Objects;
 
+import org.apache.sling.api.resource.Resource;
 import org.apache.sling.api.resource.ValueMap;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 
 import com.adobe.cq.wcm.core.components.Utils;
+import com.adobe.cq.wcm.core.components.commons.link.Link;
 import com.adobe.cq.wcm.core.components.models.ListItem;
 import com.adobe.cq.wcm.core.components.models.Teaser;
 import io.wcm.testing.mock.aem.junit5.AemContextExtension;
 
 import static com.adobe.cq.wcm.core.components.internal.link.LinkTestUtils.assertValidLink;
 import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertNotNull;
 import static org.junit.jupiter.api.Assertions.assertNull;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
@@ -36,6 +39,7 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class TeaserImplTest extends com.adobe.cq.wcm.core.components.internal.models.v1.TeaserImplTest {
 
     private static final String TEST_BASE = "/teaser/v2";
+    private static final String TEASER_25 = TEST_ROOT_PAGE + TEST_ROOT_PAGE_GRID + "/teaser-25";
 
     @BeforeEach
     protected void setUp() {
@@ -49,8 +53,18 @@ public class TeaserImplTest extends com.adobe.cq.wcm.core.components.internal.mo
         assertTrue(teaser.isActionsEnabled(), "Expected teaser with actions");
         assertEquals(2, teaser.getActions().size(), "Expected to find two Actions");
         assertEquals("Teasers Test", teaser.getTitle());
-        assertEquals("Teasers description", teaser.getDescription());
+        // < and > are expected escaped, because the page properties provide only a plain text field for the page description
+        assertEquals("Teasers description from &lt;page properties&gt;", teaser.getDescription());
         Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser11"));
+    }
+
+    @Test
+    protected void testTeaserWithTitleAndDescriptionFromCurrentPage() {
+        Teaser teaser = getTeaserUnderTest(TEASER_25);
+        assertEquals("Teasers Test", teaser.getTitle());
+        // < and > are expected escaped, because the page properties provide only a plain text field for the page description
+        assertEquals("Teasers description from &lt;page properties&gt;", teaser.getDescription());
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser25"));
     }
 
     @Test
@@ -70,18 +84,6 @@ public class TeaserImplTest extends com.adobe.cq.wcm.core.components.internal.mo
     }
 
     @Test
-    @Override
-    protected void testTeaserWithoutLink() {
-        Teaser teaser = getTeaserUnderTest(TEASER_4);
-        // TODO: make the following assert pass
-        /*
-        assertThat(testLogger.getLoggingEvents(),
-                hasItem(debug("Teaser component from /content/teasers/jcr:content/root/responsivegrid/teaser-4 does not define a link.")));
-         */
-        assertNull(teaser.getLink(), "The link should be null");
-    }
-
-    @Test
     @SuppressWarnings("deprecation")
     @Override
     protected void testTeaserWithActions() {
@@ -96,4 +98,80 @@ public class TeaserImplTest extends com.adobe.cq.wcm.core.components.internal.mo
         Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser9"));
     }
 
+    @Test
+    protected void testEmptyTeaserImageDelegatingToFeaturedImage() {
+        Teaser teaser = getTeaserUnderTest(TEASER_20);
+        Resource imageResource = teaser.getImageResource();
+        ValueMap imageProperties = imageResource.getValueMap();
+        String linkURL = imageProperties.get("linkURL", String.class);
+        String fileReference = imageProperties.get("fileReference", String.class);
+        assertEquals("/content/teasers/jcr:content/root/responsivegrid/teaser-20", imageResource.getPath(), "image resource: path");
+        assertEquals("core/wcm/components/image/v3/image", imageResource.getResourceType(), "image resource: resource type");
+        assertEquals("/content/teasers", linkURL, "image resource: linkURL");
+        assertNull(fileReference, "image resource: fileReference");
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser20"));
+    }
+
+    @Test
+    protected void testImageFromPage_withoutLink() {
+        Teaser teaser = getTeaserUnderTest(TEASER_21);
+        Link link = teaser.getLink();
+        assertNull(link);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser21"));
+    }
+
+    @Test
+    protected void testImageFromPage_withLink() {
+        Teaser teaser = getTeaserUnderTest(TEASER_22);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser22"));
+    }
+
+    @Test
+    protected void testImageFromPage_withInvalidLink() {
+        Teaser teaser = getTeaserUnderTest(TEASER_22a);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser22a"));
+    }
+
+    @Test
+    protected void testImageFromPage_withCta() {
+        Teaser teaser = getTeaserUnderTest(TEASER_23);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser23"));
+    }
+
+    @Test
+    protected void testImageFromPage_withInvalidCta() {
+        Teaser teaser = getTeaserUnderTest(TEASER_23a);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser23a"));
+    }
+
+    @Test
+    protected void testInheritedPageImage_fromTemplate_noLink() {
+        Teaser teaser = getTeaserUnderTest(TEMPLATE_TEASER_1);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "template_teaser1"));
+    }
+
+    @Test
+    protected void testInheritedPageImage_fromTemplate_withLink() {
+        Teaser teaser = getTeaserUnderTest(TEMPLATE_TEASER_2);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "template_teaser2"));
+    }
+
+    @Test
+    protected void testInheritedPageImage_fromTemplate_withCTAs() {
+        Teaser teaser = getTeaserUnderTest(TEMPLATE_TEASER_3);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "template_teaser3"));
+    }
+
+    @Test
+    protected void testImageFromPage_withLink_andTitleEmpty() {
+        Teaser teaser = getTeaserUnderTest(TEASER_24);
+        Utils.testJSONExport(teaser, Utils.getTestExporterJSONPath(testBase, "teaser24"));
+    }
+
+    @Test
+    @Override
+    protected void testTeaserWithExternalLinkFromAction() {
+        Teaser teaser = getTeaserUnderTest(TEASER_7);
+        assertEquals("http://www.adobe.com", teaser.getActions().get(0).getURL());
+    }
 }

@@ -17,9 +17,10 @@
 package com.adobe.cq.wcm.core.components.it.seljup.tests.formcontainer.v1;
 
 import com.adobe.cq.wcm.core.components.it.seljup.AuthorBaseUITest;
-import com.adobe.cq.wcm.core.components.it.seljup.components.formcomponents.FormContainerEditDialog;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.CoreComponentConstants;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.Selectors;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.formcomponents.FormContainerEditDialog;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.formcomponents.v1.FormComponents;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.RequestConstants;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.Selectors;
 import com.adobe.cq.wcm.core.components.it.seljup.util.Commons;
 import com.adobe.cq.testing.selenium.pageobject.EditorPage;
 import com.adobe.cq.testing.selenium.pageobject.PageEditorPage;
@@ -60,6 +61,7 @@ public class FormContainerIT extends AuthorBaseUITest {
     protected String formContainerRT;
     protected String formTextRT;
     protected String formButtonRT;
+    protected FormComponents formComponents;
 
 
     public void setComponentResources() {
@@ -105,6 +107,7 @@ public class FormContainerIT extends AuthorBaseUITest {
         // open the page in the editor
         editorPage = new PageEditorPage(testPage);
         editorPage.open();
+        formComponents = new FormComponents();
     }
 
     @BeforeEach
@@ -117,10 +120,10 @@ public class FormContainerIT extends AuthorBaseUITest {
     public void cleanupAfterEach() throws ClientException, InterruptedException {
         // delete any user generated content
         if(authorClient.pageExists(userContent)) {
-            authorClient.deletePageWithRetry(userContent, true, false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
+            authorClient.deletePageWithRetry(userContent, true, false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
         }
         // delete the test page we created
-        authorClient.deletePageWithRetry(testPage, true, false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(testPage, true, false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL, HttpStatus.SC_OK);
 
         // delete the proxy components created
         Commons.deleteProxyComponent(adminClient, compPathContainer);
@@ -134,8 +137,7 @@ public class FormContainerIT extends AuthorBaseUITest {
     @Test
     @DisplayName("Test: Check if the action 'Store Content' works.")
     public void testStoreContent() throws ClientException, InterruptedException {
-        Commons.openConfigureDialog(containerPath);
-        FormContainerEditDialog dialog = new FormContainerEditDialog();
+        FormContainerEditDialog dialog = formComponents.openEditDialog(containerPath);
         dialog.selectActionType("foundation/components/form/actions/store");
         String actionInputValue = dialog.getActionInputValue();
         String contentJsonUrl_allForm = actionInputValue.substring(0, actionInputValue.length() - 1);
@@ -164,8 +166,7 @@ public class FormContainerIT extends AuthorBaseUITest {
     @Test
     @DisplayName("Test: set your own content path")
     public void testSetContextPath() throws InterruptedException, ClientException {
-        Commons.openConfigureDialog(containerPath);
-        FormContainerEditDialog dialog = new FormContainerEditDialog();
+        FormContainerEditDialog dialog = formComponents.openEditDialog(containerPath);
         dialog.selectActionType("foundation/components/form/actions/store");
         String actionInputValue = userContent + "/xxx";
         dialog.setActionInputValue(actionInputValue);
@@ -184,8 +185,7 @@ public class FormContainerIT extends AuthorBaseUITest {
     @Test
     @DisplayName("Test: set the thank You page path")
     public void testSetThankYouPage() throws InterruptedException {
-        Commons.openConfigureDialog(containerPath);
-        FormContainerEditDialog dialog = new FormContainerEditDialog();
+        FormContainerEditDialog dialog = formComponents.openEditDialog(containerPath);
         dialog.selectActionType("foundation/components/form/actions/store");
         Commons.selectInAutocomplete("[name='./redirect']", rootPage);
         Commons.saveConfigureDialog();
@@ -203,8 +203,7 @@ public class FormContainerIT extends AuthorBaseUITest {
     @Test
     @DisplayName("Test: check if 'Mail' action works.")
     public void testSetMailAction() throws InterruptedException, ClientException {
-        Commons.openConfigureDialog(containerPath);
-        FormContainerEditDialog dialog = new FormContainerEditDialog();
+        FormContainerEditDialog dialog = formComponents.openEditDialog(containerPath);
         dialog.setMailActionFields(from,subject,new String[] {mailto1,mailto2}, new String[] {cc1, cc2});
         Commons.saveConfigureDialog();
         JsonNode formContentJson = adminClient.doGetJson(containerPath , 1, HttpStatus.SC_OK);

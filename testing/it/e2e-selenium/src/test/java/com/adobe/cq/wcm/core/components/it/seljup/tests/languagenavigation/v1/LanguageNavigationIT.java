@@ -19,9 +19,9 @@ package com.adobe.cq.wcm.core.components.it.seljup.tests.languagenavigation.v1;
 import com.adobe.cq.testing.selenium.pageobject.EditorPage;
 import com.adobe.cq.testing.selenium.pageobject.PageEditorPage;
 import com.adobe.cq.wcm.core.components.it.seljup.AuthorBaseUITest;
-import com.adobe.cq.wcm.core.components.it.seljup.components.languagenavigation.LanguageNavigationEditConfig;
-import com.adobe.cq.wcm.core.components.it.seljup.components.languagenavigation.v1.LanguageNavigation;
-import com.adobe.cq.wcm.core.components.it.seljup.constant.CoreComponentConstants;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.languagenavigation.LanguageNavigationEditConfig;
+import com.adobe.cq.wcm.core.components.it.seljup.util.components.languagenavigation.v1.LanguageNavigation;
+import com.adobe.cq.wcm.core.components.it.seljup.util.constant.RequestConstants;
 import com.adobe.cq.wcm.core.components.it.seljup.util.Commons;
 import org.apache.http.HttpStatus;
 import org.apache.sling.testing.clients.ClientException;
@@ -39,15 +39,19 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 public class LanguageNavigationIT extends AuthorBaseUITest {
 
     private String proxyPath;
-    private String siteRoot;
-    private String compPath;
-    private String noStructure;
-    private EditorPage editorPage;
-    private LanguageNavigation languageNavigation;
 
+    protected String siteRoot;
+    protected String compPath;
+    protected String noStructure;
+    protected EditorPage editorPage;
+    protected LanguageNavigation languageNavigation;
+    protected String languageNavigationRT;
 
-    @BeforeEach
-    public void setupBeforeEach() throws ClientException {
+    private void setupResources() {
+        languageNavigationRT = Commons.rtLanguageNavigation_v1;
+    }
+
+    protected void setup() throws ClientException {
         // site root
         siteRoot = authorClient.createPage("site_root", "site_root", rootPage, defaultPageTemplate).getSlingPath();
         HashMap<String, String> data = new HashMap<String, String>();
@@ -127,7 +131,7 @@ public class LanguageNavigationIT extends AuthorBaseUITest {
         Commons.editNodeProperties(adminClient, noStructure, data);
 
         // create a proxy component
-        proxyPath = Commons.createProxyComponent(adminClient, Commons.rtLanguageNavigation_v1, Commons.proxyPath, null, null);
+        proxyPath = Commons.createProxyComponent(adminClient, languageNavigationRT, Commons.proxyPath, null, null);
 
         compPath = Commons.addComponent(adminClient, proxyPath, about1 + Commons.relParentCompPath, "languagenavigation", null);
 
@@ -137,10 +141,16 @@ public class LanguageNavigationIT extends AuthorBaseUITest {
         languageNavigation = new LanguageNavigation();
     }
 
+    @BeforeEach
+    public void setupBeforeEach() throws ClientException {
+        setupResources();
+        setup();
+    }
+
     @AfterEach
     public void cleanupAfterEach() throws ClientException, InterruptedException {
         Commons.deleteProxyComponent(adminClient, proxyPath);
-        authorClient.deletePageWithRetry(siteRoot, true,false, CoreComponentConstants.TIMEOUT_TIME_MS, CoreComponentConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
+        authorClient.deletePageWithRetry(siteRoot, true,false, RequestConstants.TIMEOUT_TIME_MS, RequestConstants.RETRY_TIME_INTERVAL,  HttpStatus.SC_OK);
     }
 
 
